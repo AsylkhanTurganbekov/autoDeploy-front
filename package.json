@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "check": "next build",
+    "lint": "next build",
     "test": "node --test"
   },
   "dependencies": {
