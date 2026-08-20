@@ -1,5 +1,5 @@
 export type Runtime = "NODE" | "SPRING_BOOT" | "DOCKERFILE";
-export type Project = { id: number; name: string; slug: string; repositoryUrl: string; branch: string; runtime: Runtime; applicationPort: number; domain: string | null; autoDeploy: boolean; targetServerId?: number | null; createdAt: string };
+export type Project = { id: number; name: string; slug: string; repositoryUrl: string; branch: string; runtime: Runtime; applicationPort: number; publicPort: number | null; healthPath: string; domain: string | null; autoDeploy: boolean; targetServerId?: number | null; createdAt: string };
 export type EnvironmentVariable = { id: number; key: string; value: string | null; secret: boolean; createdAt: string };
 export type Deployment = { id: number; projectSlug: string; commitSha: string; status: string; failureReason?: string | null; createdAt: string; updatedAt?: string };
 export type DeploymentLog = { id: number; lineNumber: number; message: string; createdAt: string };

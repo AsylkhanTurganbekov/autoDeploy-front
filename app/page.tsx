@@ -5,7 +5,7 @@ import { api, auth, AnalyzerResult, Dashboard, Deployment, EnvironmentVariable, 
 type View = "dashboard" | "projects" | "deployments" | "monitoring" | "git" | "servers" | "logs" | "settings" | "new" | "project";
 const nav: [View,string,string][] = [["dashboard","⌂","Дашборд"],["projects","▣","Проекты"],["deployments","↻","Deployments"],["monitoring","⌁","Мониторинг"],["git","⌘","Git Sources"],["servers","▤","Серверы"],["logs","≡","Логи"],["settings","⚙","Настройки"]];
 const runtime: Record<Runtime,string>={NODE:"Node.js",SPRING_BOOT:"Spring Boot",DOCKERFILE:"Dockerfile"};
-const blank={name:"",slug:"",repositoryUrl:"",branch:"main",runtime:"NODE" as Runtime,applicationPort:3000,domain:"",autoDeploy:true};
+const blank={name:"",slug:"",repositoryUrl:"",branch:"main",runtime:"NODE" as Runtime,applicationPort:3000,publicPort:18100,healthPath:"/health",domain:"",autoDeploy:true};
 
 export default function Home(){
  const [view,setView]=useState<View>("dashboard"),[projects,setProjects]=useState<Project[]>([]),[deployments,setDeployments]=useState<Deployment[]>([]),[dashboard,setDashboard]=useState<Dashboard|null>(null),[metrics,setMetrics]=useState<Monitoring|null>(null),[servers,setServers]=useState<Server[]>([]),[connections,setConnections]=useState<GitConnection[]>([]),[active,setActive]=useState<Project|null>(null),[notice,setNotice]=useState("Загрузка данных…"),[token,setToken]=useState<string>("");
