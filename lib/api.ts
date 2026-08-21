@@ -1,4 +1,4 @@
-export type Runtime = "NODE" | "SPRING_BOOT" | "DOCKERFILE";
+export type Runtime = "NODE" | "SPRING_BOOT" | "PYTHON" | "GO" | "DOTNET" | "DOCKERFILE";
 export type Project = { id: number; name: string; slug: string; repositoryUrl: string; branch: string; runtime: Runtime; applicationPort: number; publicPort: number | null; healthPath: string; domain: string | null; autoDeploy: boolean; targetServerId?: number | null; createdAt: string };
 export type EnvironmentVariable = { id: number; key: string; value: string | null; secret: boolean; createdAt: string };
 export type Deployment = { id: number; projectSlug: string; commitSha: string; status: string; failureReason?: string | null; createdAt: string; updatedAt?: string };
@@ -8,6 +8,8 @@ export type Dashboard = { projects: number; activeDeployments: number; servers: 
 export type Server = { id: number; name: string; host: string; environment: string; labels: string; status: string; lastSeen: string | null; cpu?: number; ram?: number; disk?: number; containers?: number; lastHeartbeat?: string };
 export type Monitoring = { status: string; uptime: string; cpu: number; ram: string; requestsPerMinute: number; responseTimeMs: number; availability: number; cpuSeries: number[]; ramSeries: number[]; requestSeries: number[] };
 export type GitConnection = { id: number; name: string; provider: string; status: string; account: string; description: string };
+export type ProjectService = { id:number; key:string; path:string; runtime:Runtime; internalPort:number; visibility:"PUBLIC"|"PRIVATE"; dockerfileSource:"REPOSITORY"|"GENERATED"; selected:boolean; evidence:string };
+export type DeploymentPlan = { source:"NITEC"|"RULE_BASED"; selectedServiceKey:string|null; summary:string; sanitizedContext:Record<string,unknown> };
 
 const base = "/api/v1";
 const tokenKey = "autodeploy.access-token";
@@ -31,8 +33,9 @@ export const api = {
   variables: (projectId: number) => request<EnvironmentVariable[]>(`/projects/${projectId}/variables`),
   saveVariable: (projectId: number, key: string, value: string, secret: boolean) => request<EnvironmentVariable>(`/projects/${projectId}/variables/${encodeURIComponent(key)}`, { method: "PUT", body: JSON.stringify({ value, secret }) }),
   deleteVariable:(projectId:number,key:string)=>request<void>(`/projects/${projectId}/variables/${encodeURIComponent(key)}`,{method:"DELETE"}),
-  deploy: (projectId: number, commitSha: string) => request<Deployment>(`/projects/${projectId}/deployments`, { method: "POST", body: JSON.stringify({ commitSha }) }),
+  deploy: (projectId: number, commitSha: string, serviceId?:number) => request<Deployment>(`/projects/${projectId}/deployments`, { method: "POST", body: JSON.stringify({ commitSha, serviceId }) }),
   projectDeployments:(id:number)=>request<Deployment[]>(`/projects/${id}/deployments`), rollback:(projectId:number,deploymentId:number)=>request<Deployment>(`/projects/${projectId}/deployments/${deploymentId}/rollback`,{method:"POST"}), advisor:(id:number)=>request<{recommendation:string}>(`/projects/${id}/advisor`,{method:"POST"}), deployments: () => request<Deployment[]>("/deployments"), logs: (deploymentId: number) => request<DeploymentLog[]>(`/deployments/${deploymentId}/logs`), analyze:(id:number)=>request<AnalyzerResult>(`/projects/${id}/analyze`,{method:"POST"}), analysis:(id:number)=>request<AnalyzerResult>(`/projects/${id}/analysis`),
+  services:(id:number)=>request<ProjectService[]>(`/projects/${id}/services`), selectService:(projectId:number,serviceId:number)=>request<void>(`/projects/${projectId}/services/${serviceId}/select`,{method:"POST"}), deploymentPlan:(id:number)=>request<DeploymentPlan>(`/projects/${id}/deployment-plan`,{method:"POST"}),
   githubConnections:()=>request<{id:number;provider:string;account:string;status:string;createdAt:string}[]>("/github/connections"), connectGitHub:(token:string)=>request<{id:number;provider:string;account:string}>("/github/connections",{method:"POST",body:JSON.stringify({token})}), disconnectGitHub:(id:number)=>request<void>(`/github/connections/${id}`,{method:"DELETE"}), branches:(repository:string)=>request<string[]>(`/github/branches?repository=${encodeURIComponent(repository)}`),
   dashboard: () => request<Dashboard>("/dashboard"), monitoring: () => request<Monitoring>("/monitoring"), servers: () => request<Server[]>("/servers"), createServer: (data: Pick<Server,"name"|"host"|"environment"|"labels">) => request<Server>("/servers", { method: "POST", body: JSON.stringify(data) }), enrollment: (id:number) => request<{token:string;expiresAt:string;notice:string}>(`/servers/${id}/enrollment`, { method:"POST" }), connections: () => request<GitConnection[]>("/git-connections"),
 };
