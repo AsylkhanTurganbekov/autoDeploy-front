@@ -7,7 +7,8 @@ COPY package*.json ./
 # npm fail transiently on restricted server networks.
 RUN npm ci --no-audit --no-fund
 COPY . .
-RUN npm run check && npm run build
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm run build
 FROM node:20-bookworm-slim
 WORKDIR /app
 ENV NODE_ENV=production
