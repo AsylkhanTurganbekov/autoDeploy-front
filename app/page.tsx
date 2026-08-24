@@ -176,6 +176,11 @@ export default function Home() {
         initial={selectedDeployment}
         back={() => setView("project")}
         openDeployments={() => setView("deployments")}
+        retry={async () => {
+          const next = await api.deploy(active.id, "");
+          setDeployments((items) => [next, ...items]);
+          setSelectedDeployment(next);
+        }}
       />
     );
   else if (view === "deployments")
@@ -878,11 +883,13 @@ function DeploymentResultPage({
   initial,
   back,
   openDeployments,
+  retry,
 }: {
   project: Project;
   initial: Deployment;
   back: () => void;
   openDeployments: () => void;
+  retry: () => Promise<void>;
 }) {
   const [currentProject, setCurrentProject] = useState(project),
     [deployment, setDeployment] = useState(initial),
@@ -939,6 +946,11 @@ function DeploymentResultPage({
         : terminal
           ? `Deployment завершён: ${deployment.status}`
           : "Agent выполняет работу — страница обновляется автоматически";
+  const checkoutDone = logs.some((line) => line.includes("Checking out") || line.includes("Static plan"));
+  const analysisDone = logs.some((line) => line.includes("Static plan selected"));
+  const buildStarted = logs.some((line) => line.includes("Building immutable Docker image"));
+  const healthStarted = logs.some((line) => line.includes("Health check"));
+  const phase = (done: boolean, active: boolean) => done ? "done" : active ? "active" : "";
   return (
     <>
       <p className="crumb">
@@ -999,17 +1011,17 @@ function DeploymentResultPage({
         <article className="panel">
           <Head title="Что сделал Agent" />
           <ol className="agent-steps">
-            <li className="done">
+            <li className={phase(checkoutDone, deployment.status === "CHECKOUT")}>
               Принял репозиторий и ветку <b>{project.branch}</b>
             </li>
-            <li className="done">
+            <li className={phase(analysisDone, checkoutDone && !analysisDone)}>
               Проверил структуру без запуска кода на этапе анализа
             </li>
-            <li className={deployment.status === "QUEUED" ? "active" : "done"}>
+            <li className={phase(buildStarted, analysisDone && !buildStarted)}>
               Собирает безопасный Docker-образ и запускает изолированный
               контейнер
             </li>
-            <li className={deployment.status === "SUCCESS" ? "done" : ""}>
+            <li className={phase(deployment.status === "SUCCESS", healthStarted && deployment.status !== "SUCCESS")}>
               Проверяет health endpoint{" "}
               <code>{currentProject.healthPath || "/"}</code>
             </li>
@@ -1061,6 +1073,7 @@ function DeploymentResultPage({
           </p>
           <button onClick={back}>Вернуться к проекту</button>{" "}
           <button onClick={openDeployments}>Все deployments</button>
+          {deployment.status === "FAILED" && <button className="primary" onClick={() => void retry().catch((e) => setError(e instanceof Error ? e.message : "Retry failed"))}>Retry deployment</button>}
         </article>
       </section>
       <article className="panel log-view">
