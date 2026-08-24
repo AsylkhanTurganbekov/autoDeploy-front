@@ -1,3 +1,5 @@
 import type { NextConfig } from "next";
-const nextConfig: NextConfig = { output: "standalone" };
+// The runtime image installs only production dependencies and runs `next start`.
+// Avoid standalone tracing, which can stall while Docker BuildKit snapshots files.
+const nextConfig: NextConfig = {};
 export default nextConfig;
