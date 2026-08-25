@@ -896,6 +896,14 @@ function DeploymentResultPage({
     [services, setServices] = useState<ProjectService[]>([]),
     [logs, setLogs] = useState<string[]>([]),
     [error, setError] = useState("");
+  // Retry replaces the selected deployment in the parent. Synchronize local
+  // live-log state so the screen immediately follows that new deployment.
+  useEffect(() => {
+    setDeployment(initial);
+    setLogs([]);
+    setServices([]);
+    setError("");
+  }, [initial.id]);
   const terminal = ["SUCCESS", "FAILED", "CANCELLED", "ROLLED_BACK"].includes(
     deployment.status,
   );
