@@ -958,6 +958,7 @@ function DeploymentResultPage({
   const analysisDone = logs.some((line) => line.includes("Static plan selected"));
   const buildStarted = logs.some((line) => line.includes("Building immutable Docker image"));
   const healthStarted = logs.some((line) => line.includes("Health check"));
+  const succeeded = deployment.status === "SUCCESS";
   const phase = (done: boolean, active: boolean) => done ? "done" : active ? "active" : "";
   return (
     <>
@@ -1019,17 +1020,17 @@ function DeploymentResultPage({
         <article className="panel">
           <Head title="Что сделал Agent" />
           <ol className="agent-steps">
-            <li className={phase(checkoutDone, deployment.status === "CHECKOUT")}>
+            <li className={phase(succeeded || checkoutDone, deployment.status === "CHECKOUT")}>
               Принял репозиторий и ветку <b>{project.branch}</b>
             </li>
-            <li className={phase(analysisDone, checkoutDone && !analysisDone)}>
+            <li className={phase(succeeded || analysisDone, checkoutDone && !analysisDone)}>
               Проверил структуру без запуска кода на этапе анализа
             </li>
-            <li className={phase(buildStarted, analysisDone && !buildStarted)}>
+            <li className={phase(succeeded || buildStarted, analysisDone && !buildStarted)}>
               Собирает безопасный Docker-образ и запускает изолированный
               контейнер
             </li>
-            <li className={phase(deployment.status === "SUCCESS", healthStarted && deployment.status !== "SUCCESS")}>
+            <li className={phase(succeeded, healthStarted && !succeeded)}>
               Проверяет health endpoint{" "}
               <code>{currentProject.healthPath || "/"}</code>
             </li>
